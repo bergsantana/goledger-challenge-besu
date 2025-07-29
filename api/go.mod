@@ -1,4 +1,4 @@
-module go-besu-api
+module github.com/bergsantana/goledger-challenge-besu/api
 
 go 1.24.5
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	//"os"
 
@@ -12,20 +12,21 @@ import (
 )
 
 func main() {
+	log.SetReportCaller(true)
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env")
 	}
 
-	db := InitDB()
+	db := api.InitDB()
 	defer db.Close()
 
-	contract, err := LoadContract()
+	contract, err := api.LoadContract()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	SetupRoutes(db, contract)
+	api.SetupRoutes(db, contract)
 	log.Println("Server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

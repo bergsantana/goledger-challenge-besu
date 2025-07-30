@@ -1,17 +1,19 @@
-package api
+package handler
 
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+
 	"net/http"
 	"strconv"
+
+	"github.com/bergsantana/goledger-challenge-besu/api/contract"
+
 )
 
-func SetupRoutes(db *sql.DB, contract *ContractClient) {
+func SetupRoutes(db *sql.DB, contract *contract.ContractClient) {
 	http.HandleFunc("/set", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("/set this contract ")
-		fmt.Println(contract.contractAbi)
+	
 		val := r.URL.Query().Get("value")
 		num, err := strconv.ParseInt(val, 10, 64)
 		if err != nil {
@@ -27,8 +29,7 @@ func SetupRoutes(db *sql.DB, contract *ContractClient) {
 	})
 
 	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("/get this contract ")
-		fmt.Println(contract.contractAbi)
+	
 		val, err := contract.GetValue()
 		if err != nil {
 			http.Error(w, err.Error(), 500)

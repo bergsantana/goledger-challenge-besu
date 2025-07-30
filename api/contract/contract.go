@@ -63,7 +63,6 @@ func LoadContract() (*ContractClient, error) {
 	log.Println("🔑 Using address:", fromAddress.Hex())
 
 	chainID := big.NewInt(1337)
-
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
 		log.Fatalf("\nError on auth: %v\n", err)
@@ -111,15 +110,19 @@ func LoadContract() (*ContractClient, error) {
 	}, nil
 }
 
+
+//  Sends a signed transaction to the blockchain
 func (c *ContractClient) SetValue(value int64) (*types.Transaction, error) {
 
 	input, err := c.contractAbi.Pack("set", big.NewInt(value))
 	if err != nil {
+		log.Fatalf("Error packing ABI: %v\n", err)
 		return nil, err
 	}
 
 	nonce, err := c.client.PendingNonceAt(context.Background(), c.auth.From)
 	if err != nil {
+		log.Fatalf("Error getting Nonce: %v\n", err)
 		return nil, err
 	}
 
@@ -129,22 +132,25 @@ func (c *ContractClient) SetValue(value int64) (*types.Transaction, error) {
 
 	signedTx, err := c.auth.Signer(c.auth.From, tx)
 	if err != nil {
+		log.Fatalf("Error signing transaction: %v\n", err)
 		return nil, err
 	}
 
 	err = c.client.SendTransaction(context.Background(), signedTx)
 	if err != nil {
+		log.Fatalf("Error sending transaction: %v\n", err)
 		return nil, err
 	}
-
 	return signedTx, nil
 }
 
+// Reads the current value stored in the smart contract
 func (c *ContractClient) GetValue() (*big.Int, error) {
 
 	out, err := c.contractAbi.Pack("get")
 
 	if err != nil {
+		log.Fatalf("Error packing ABI: %v\n", err)
 		return nil, err
 	}
 
@@ -155,6 +161,7 @@ func (c *ContractClient) GetValue() (*big.Int, error) {
 
 	res, err := c.client.CallContract(context.Background(), callMsg, nil)
 	if err != nil {
+		log.Fatalf("Error retrieving contract: %v\n", err)
 		return nil, err
 	}
 

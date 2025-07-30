@@ -2,7 +2,7 @@ package database
 
 import (
 	"database/sql"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -22,7 +22,7 @@ func InitDB() *sql.DB {
 	`)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not connect to dabatase: %v", err)
 	}
 
 	return db

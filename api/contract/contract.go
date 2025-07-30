@@ -116,7 +116,7 @@ func (c *ContractClient) SetValue(value int64) (*types.Transaction, error) {
 
 	input, err := c.contractAbi.Pack("set", big.NewInt(value))
 	if err != nil {
-		log.Fatalf("Error packing ABI: %v\n", err)
+		log.Fatalf("Error packing ABI while setting value: %v\n", err)
 		return nil, err
 	}
 
@@ -150,7 +150,7 @@ func (c *ContractClient) GetValue() (*big.Int, error) {
 	out, err := c.contractAbi.Pack("get")
 
 	if err != nil {
-		log.Fatalf("Error packing ABI: %v\n", err)
+		log.Fatalf("Error packing ABI while retrieving value: %v\n", err)
 		return nil, err
 	}
 

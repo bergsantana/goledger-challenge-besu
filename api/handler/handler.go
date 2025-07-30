@@ -55,7 +55,7 @@ func SetupRoutes(db *sql.DB, contract *contract.ContractClient) {
 			ON CONFLICT (address) DO UPDATE
 			SET value = EXCLUDED.value
 		`, val.Int64(), address.Hex())
-		
+
 		if err != nil {
 			log.Errorf("Error while sync value to database: '%v'\n", err)
 			http.Error(w, err.Error(), 500)
@@ -65,8 +65,6 @@ func SetupRoutes(db *sql.DB, contract *contract.ContractClient) {
 	})
 
 	http.HandleFunc("/check", func(w http.ResponseWriter, r *http.Request) {
-	
-	
 		blockVal, address, err := contract.GetValue()
 		if err != nil {
 			log.Errorf("Error getting the value of contract: '%v'\n", err)
@@ -74,7 +72,6 @@ func SetupRoutes(db *sql.DB, contract *contract.ContractClient) {
 			http.Error(w, err.Error(), 500)
 			return
 		}
-
 
 		var dbVal int
 		err = db.QueryRow("SELECT value FROM storage WHERE address= $1 ORDER BY id DESC LIMIT 1", address.Hex()).Scan(&dbVal)
@@ -84,9 +81,7 @@ func SetupRoutes(db *sql.DB, contract *contract.ContractClient) {
 			return
 		}
 
-		 
-
 		match := dbVal == int(blockVal.Int64())
-		json.NewEncoder(w).Encode(map[string]bool{"match": match})
+		json.NewEncoder(w).Encode(match)
 	})
 }

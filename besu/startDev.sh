@@ -139,6 +139,4 @@ npx hardhat compile
 cd ..
 
 echo "Deploying contract..."
-npx hardhat ignition deploy ./ignition/modules/deploy.js --network besu << EOF
-y
-EOF
+npx hardhat ignition deploy ./ignition/modules/deploy.js --network besu  

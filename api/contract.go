@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
-	"fmt"
-	"time"
+
+	//"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -29,26 +29,24 @@ type ContractClient struct {
 	auth        *bind.TransactOpts
 	address     common.Address
 	contractAbi abi.ABI
-	//fromAddress common.Address
 }
 
 func LoadContract() (*ContractClient, error) {
 	client, err := ethclient.Dial(os.Getenv("NODE_URL"))
 
 	if err != nil {
-		fmt.Printf("\nError loading node: %v\n", err)
+		log.Fatalf("\nError loading node: %v\n", err)
 		return nil, err
 	}
 
 	_, err = client.ChainID(context.Background())
-
 	if err != nil {
-		fmt.Printf("\nFailed to get chain ID: %v\n", err)
+		log.Fatalf("\nFailed to get chain ID: %v\n", err)
 	}
 
 	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(os.Getenv("PRIVATE_KEY"), "0x"))
 	if err != nil {
-		fmt.Printf("\nError loading private key: %v\n", err)
+		log.Fatalf("\nError loading private key: %v\n", err)
 
 		return nil, err
 	}
@@ -56,19 +54,19 @@ func LoadContract() (*ContractClient, error) {
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
-		fmt.Printf("\nError reading Public Key: %v\n", err)
+		log.Fatalf("\nError reading Public Key: %v\n", err)
 
 		return nil, err
 	}
 
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	fmt.Println("🔑 Using address:", fromAddress.Hex())
+	log.Println("🔑 Using address:", fromAddress.Hex())
 
 	chainID := big.NewInt(1337)
 
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
-		fmt.Printf("\nError on auth: %v\n", err)
+		log.Fatalf("\nError on auth: %v\n", err)
 
 		return nil, err
 	}
@@ -76,13 +74,13 @@ func LoadContract() (*ContractClient, error) {
 	address := common.HexToAddress(os.Getenv("CONTRACT_ADDRESS"))
 	code, err := client.CodeAt(context.Background(), address, nil)
 	if err != nil {
-		fmt.Printf("\n❌ Error reading contract code: %v\n", err)
+		log.Fatalf("\n❌ Error reading contract code: %v\n", err)
 	}
 
 	if len(code) == 0 {
-		fmt.Printf("\n❌ No contract deployed at address %s\n", address.Hex())
+		log.Fatalf("\n❌ No contract deployed at address %s\n", address.Hex())
 	} else {
-		fmt.Println("✅ Contract is deployed at", address.Hex())
+		log.Println("✅ Contract is deployed at", address.Hex())
 	}
 
 	// Load ABI
@@ -105,19 +103,16 @@ func LoadContract() (*ContractClient, error) {
 		return nil, err
 	}
 
-	CallContract()
-
 	return &ContractClient{
 		client:      client,
 		auth:        auth,
 		address:     address,
 		contractAbi: parsedAbi,
-		//fromAddress: fromAddress,
 	}, nil
 }
 
 func (c *ContractClient) SetValue(value int64) (*types.Transaction, error) {
-	CallContract()
+
 	input, err := c.contractAbi.Pack("set", big.NewInt(value))
 	if err != nil {
 		return nil, err
@@ -146,12 +141,8 @@ func (c *ContractClient) SetValue(value int64) (*types.Transaction, error) {
 }
 
 func (c *ContractClient) GetValue() (*big.Int, error) {
-	CallContract()
-	out, err := c.contractAbi.Pack("get")
 
-	fmt.Println("c.address")
-	fmt.Println(c.address)
-	fmt.Println(&c.address)
+	out, err := c.contractAbi.Pack("get")
 
 	if err != nil {
 		return nil, err
@@ -170,57 +161,4 @@ func (c *ContractClient) GetValue() (*big.Int, error) {
 	var value *big.Int
 	err = c.contractAbi.UnpackIntoInterface(&value, "get", res)
 	return value, err
-}
-
-func CallContract() {
-	var result interface{}
-	raw, err := os.ReadFile("abi/SimpleStorage.json")
-	if err != nil {
-		log.Fatalf("Error loading ABI file: %v", err)
-	}
-
-	var artifact struct {
-		ABI json.RawMessage `json:"abi"`
-	}
-	err = json.Unmarshal(raw, &artifact)
-
-	if err != nil {
-		log.Fatalf("Error parsing ABI File: %v", err)
-	}
-	abi, err := abi.JSON(strings.NewReader(string(artifact.ABI))) // found under besu/artifacts/contracts/SimpleStorage.sol/SimpleStorage.json
-	if err != nil {
-		log.Fatalf("error parsing abi: %v", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	client, err := ethclient.DialContext(ctx, "http://localhost:8545") // e.g., http://localhost:8545
-	if err != nil {
-		log.Fatalf("error connecting to eth client: %v", err)
-	}
-	defer client.Close()
-
-	contractAddress := common.HexToAddress("enode://38e0f5cd19120e150c10ba3754de21d7cda215f2bb3a8d7360abf55e4f7205e41d601cd7e55a6afd23ccf14975f2c3f24a129934c6d091bf0fa8ba7ea0463cbc@127.0.0.1:30303") // will be returned during startDev.sh execution
-	caller := bind.CallOpts{
-		Pending: false,
-		Context: ctx,
-	}
-
-	boundContract := bind.NewBoundContract(
-		contractAddress,
-		abi,
-		client,
-		client,
-		client,
-	)
-
-	var output []interface{}
-	err = boundContract.Call(&caller, &output, "get")
-	if err != nil {
-		log.Fatalf("error calling contract: %v", err)
-	}
-	result = output
-
-	fmt.Println("Successfully called contract!", result)
 }

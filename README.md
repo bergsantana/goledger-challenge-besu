@@ -67,17 +67,21 @@ CHAIN_ID=1337
 ```
 git clone https://github.com/bergsantana/goledger-challenge-besu.git
 ```
-2. Navigate to besu folder, then deploy the smart contract
+2. Navigate to besu folder, then deploy the smart contract, press Y to display the contract address, use it your .env
 ```
 cd goledger-challenge-besu/besu
+npm install
 ./startDev.sh
 ```
-3. Navigate to the api folder and start the database
-Run 
+3. Navigate to the api folder and start the database with
 ```
+cd ../api
 docker compose up -d
 ```
-4. 
+4. Start the API
+```
+go run cmd/api/main.go
+```
 
 # The Endpoints
 After installing and running your API you should see the available endpoints on the console:

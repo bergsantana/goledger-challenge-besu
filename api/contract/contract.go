@@ -5,8 +5,6 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 
-	 
-
 	log "github.com/sirupsen/logrus"
 
 	"math/big"
@@ -110,8 +108,7 @@ func LoadContract() (*ContractClient, error) {
 	}, nil
 }
 
-
-//  Sends a signed transaction to the blockchain
+// Sends a signed transaction to the blockchain
 func (c *ContractClient) SetValue(value int64) (*types.Transaction, error) {
 
 	input, err := c.contractAbi.Pack("set", big.NewInt(value))
@@ -145,13 +142,13 @@ func (c *ContractClient) SetValue(value int64) (*types.Transaction, error) {
 }
 
 // Reads the current value stored in the smart contract
-func (c *ContractClient) GetValue() (*big.Int, error) {
+func (c *ContractClient) GetValue() (*big.Int, common.Address, error) {
 
 	out, err := c.contractAbi.Pack("get")
 
 	if err != nil {
 		log.Fatalf("Error packing ABI while retrieving value: %v\n", err)
-		return nil, err
+		return nil, c.address, err
 	}
 
 	callMsg := ethereum.CallMsg{
@@ -162,10 +159,10 @@ func (c *ContractClient) GetValue() (*big.Int, error) {
 	res, err := c.client.CallContract(context.Background(), callMsg, nil)
 	if err != nil {
 		log.Fatalf("Error retrieving contract: %v\n", err)
-		return nil, err
+		return nil, c.address, err
 	}
 
 	var value *big.Int
 	err = c.contractAbi.UnpackIntoInterface(&value, "get", res)
-	return value, err
+	return value, c.address, err
 }

@@ -17,6 +17,7 @@ func InitDB() *sql.DB {
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS storage (
 			id SERIAL PRIMARY KEY,
+			address TEXT NOT NULL UNIQUE,
 			value INTEGER NOT NULL
 		);
 	`)
